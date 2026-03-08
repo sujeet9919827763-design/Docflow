@@ -499,7 +499,17 @@ function genQR(){
   new QRCode(div,{text:content,width:window._qrs||200,height:window._qrs||200,colorDark:'#1e293b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   toast('✅ QR Ready!','success');
 }
-function dlQR(){const img=document.querySelector('#qrcd img');if(!img)return;const a=document.createElement('a');a.href=img.src;a.download='qrcode.png';a.click();}
+function dlQR(){
+  const canvas=document.querySelector('#qrcd canvas');
+  const img=document.querySelector('#qrcd img');
+  if(canvas){
+    canvas.toBlob(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='qrcode.png';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);},'image/png');
+  } else if(img){
+    const c=document.createElement('canvas');c.width=img.naturalWidth||200;c.height=img.naturalHeight||200;
+    const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+    c.toBlob(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='qrcode.png';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);},'image/png');
+  }
+}
 function printQR(){const img=document.querySelector('#qrcd img');if(!img)return;const w=window.open('');w.document.write(`<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;margin:0"><img src="${img.src}"><script>window.onload=function(){window.print()}<\/script></body></html>`);}
 
 // 11. EXCEL → PDF
