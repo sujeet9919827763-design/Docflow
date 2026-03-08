@@ -1,968 +1,566 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDF Tool Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>OfficeFlow — Complete Office Suite</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: #0f1117;
-  color: #e2e8f0;
-  min-height: 100vh;
-}
-
-/* NAVBAR */
-.navbar {
-  background: #1a1d2e;
-  border-bottom: 1px solid #2d3148;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  height: 60px;
-  gap: 8px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-right: 16px;
-}
-
-.nav-btn {
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-}
-.nav-btn:hover { background: #2d3148; color: #e2e8f0; }
-.nav-btn.active { background: #6366f1; color: white; }
-
-/* MAIN */
-.main { padding: 32px 24px; max-width: 1200px; margin: 0 auto; }
-
-/* PANELS */
-.panel { display: none; }
-.panel.active { display: block; }
-
-/* UPLOAD ZONE */
-.upload-zone {
-  border: 2px dashed #3d4163;
-  border-radius: 16px;
-  padding: 48px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s;
-  background: #1a1d2e;
-  margin-bottom: 24px;
-}
-.upload-zone:hover, .upload-zone.drag { border-color: #6366f1; background: #1e2040; }
-.upload-zone .icon { font-size: 48px; margin-bottom: 12px; }
-.upload-zone h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
-.upload-zone p { color: #64748b; font-size: 14px; }
-.upload-zone input { display: none; }
-
-/* BUTTONS */
-.btn {
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-primary { background: #6366f1; color: white; }
-.btn-primary:hover { background: #5558e8; transform: translateY(-1px); }
-.btn-success { background: #10b981; color: white; }
-.btn-success:hover { background: #0ea572; }
-.btn-danger { background: #ef4444; color: white; }
-.btn-danger:hover { background: #dc2626; }
-.btn-outline { background: transparent; color: #94a3b8; border: 1px solid #3d4163; }
-.btn-outline:hover { background: #2d3148; color: #e2e8f0; }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-
-/* FILE LIST */
-.file-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-.file-item {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 12px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.file-item .file-icon { font-size: 24px; }
-.file-item .file-info { flex: 1; }
-.file-item .file-name { font-weight: 500; font-size: 14px; }
-.file-item .file-size { color: #64748b; font-size: 12px; margin-top: 2px; }
-.file-item .file-actions { display: flex; gap: 8px; }
-
-/* MERGE */
-.merge-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-.merge-item {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 12px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: grab;
-}
-.merge-item:active { cursor: grabbing; }
-.merge-item.dragging { opacity: 0.5; border-color: #6366f1; }
-.merge-item .order { width: 28px; height: 28px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.drag-handle { color: #475569; font-size: 18px; cursor: grab; }
-
-/* EDITOR */
-.editor-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 20px;
-  height: calc(100vh - 140px);
-}
-
-.editor-sidebar {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 16px;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tool-group { margin-bottom: 8px; }
-.tool-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #475569; margin-bottom: 6px; padding-left: 4px; }
-
-.tool-btn {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s;
-  font-family: 'Inter', sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tool-btn:hover { background: #2d3148; color: #e2e8f0; }
-.tool-btn.active { background: #312e81; border-color: #6366f1; color: #a5b4fc; }
-
-.color-row { display: flex; gap: 6px; padding: 4px; flex-wrap: wrap; }
-.color-dot {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.15s;
-}
-.color-dot.active, .color-dot:hover { border-color: white; transform: scale(1.15); }
-
-.size-slider { width: 100%; margin: 6px 0; accent-color: #6366f1; }
-
-.editor-canvas-area {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 16px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-toolbar {
-  padding: 12px 16px;
-  border-bottom: 1px solid #2d3148;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.canvas-wrapper {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 20px;
-  background: #0f1117;
-}
-
-canvas { max-width: 100%; }
-
-/* REARRANGE */
-.pages-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.page-thumb {
-  background: #1a1d2e;
-  border: 2px solid #2d3148;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-  cursor: grab;
-  transition: all 0.2s;
-  position: relative;
-}
-.page-thumb:hover { border-color: #6366f1; transform: translateY(-2px); }
-.page-thumb.selected { border-color: #6366f1; background: #1e2040; }
-.page-thumb.dragging { opacity: 0.4; }
-.page-thumb canvas { width: 100%; border-radius: 6px; display: block; }
-.page-num {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-}
-.page-del {
-  position: absolute;
-  top: 6px; right: 6px;
-  width: 22px; height: 22px;
-  background: #ef4444;
-  border: none;
-  border-radius: 50%;
-  color: white;
-  font-size: 12px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.page-thumb:hover .page-del { display: flex; }
-
-/* QUALITY */
-.quality-card {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 20px;
-}
-.quality-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-.quality-card p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-
-.quality-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.quality-opt {
-  border: 2px solid #2d3148;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-.quality-opt:hover { border-color: #6366f1; }
-.quality-opt.selected { border-color: #6366f1; background: #1e2040; }
-.quality-opt .q-icon { font-size: 28px; margin-bottom: 8px; }
-.quality-opt .q-name { font-weight: 600; font-size: 14px; }
-.quality-opt .q-desc { color: #64748b; font-size: 11px; margin-top: 4px; }
-
-/* STATUS */
-.status-bar {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 13px;
-  display: none;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  z-index: 999;
-  max-width: 300px;
-}
-.status-bar.show { display: flex; }
-.status-bar.success { border-color: #10b981; color: #10b981; }
-.status-bar.error { border-color: #ef4444; color: #ef4444; }
-.status-bar.info { border-color: #6366f1; color: #a5b4fc; }
-.spinner { width: 16px; height: 16px; border: 2px solid #3d4163; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* SECTION HEADER */
-.section-header { margin-bottom: 24px; }
-.section-header h2 { font-size: 22px; font-weight: 700; }
-.section-header p { color: #64748b; font-size: 14px; margin-top: 4px; }
-
-.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.mt-16 { margin-top: 16px; }
-.mt-24 { margin-top: 24px; }
-
-.empty-state {
-  text-align: center;
-  padding: 48px;
-  color: #475569;
-}
-.empty-state .e-icon { font-size: 48px; margin-bottom: 12px; }
-
-input[type=text], input[type=number] {
-  background: #0f1117;
-  border: 1px solid #3d4163;
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #e2e8f0;
-  font-size: 13px;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-}
-input[type=text]:focus, input[type=number]:focus { border-color: #6366f1; }
+:root{--bg:#f0f4ff;--white:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.14);--r:16px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito','Noto Sans Devanagari',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.navbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(99,102,241,.3);}
+.logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+.logo-text span{background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.lang-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.home-header{padding:24px 20px 14px;max-width:800px;margin:0 auto;}
+.home-header h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
+.home-header p{color:var(--muted);font-size:13px;}
+.tools-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 16px 40px;max-width:800px;margin:0 auto;}
+@media(min-width:480px){.tools-grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:700px){.tools-grid{grid-template-columns:repeat(4,1fr);}}
+.tool-card{background:var(--white);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow);border:2px solid transparent;transition:all .2s;position:relative;overflow:hidden;}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad);border-radius:var(--r) var(--r) 0 0;}
+.tool-card:active{transform:scale(.96);}
+.tool-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--clr);}
+.tc-icon{font-size:32px;margin-bottom:8px;display:block;}
+.tc-name{font-size:12px;font-weight:700;margin-bottom:3px;}
+.tc-desc{font-size:10px;color:var(--muted);}
+.tc-badge{position:absolute;top:10px;right:8px;color:white;font-size:8px;padding:2px 6px;border-radius:20px;font-weight:700;background:var(--clr);}
+.panel-view{display:none;}
+.panel-view.active{display:block;animation:fadeIn .22s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.panel-header{padding:18px 16px 10px;max-width:700px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+.back-btn{width:38px;height:38px;border-radius:12px;border:1.5px solid var(--border);background:var(--white);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);flex-shrink:0;}
+.panel-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.panel-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.panel-body{padding:0 16px 60px;max-width:700px;margin:0 auto;}
+.upload-zone{border:2.5px dashed var(--border);border-radius:var(--r);padding:32px 16px;text-align:center;background:var(--white);margin-bottom:14px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;}
+.upload-zone:active{transform:scale(.98);}
+.uz-icon{font-size:40px;margin-bottom:10px;}
+.upload-zone h3{font-size:15px;font-weight:700;margin-bottom:5px;}
+.upload-zone p{color:var(--muted);font-size:12px;margin-bottom:12px;}
+.upload-zone input{display:none;}
+.uz-btn{display:inline-block;padding:10px 26px;border-radius:10px;font-size:13px;font-weight:700;color:white;background:var(--clr,#6366f1);}
+.card{background:var(--white);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--border);}
+.card-title{font-size:11px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.btn{padding:12px 20px;border-radius:12px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito','Noto Sans Devanagari',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .18s;}
+.btn:active{transform:scale(.96);}
+.btn-primary{color:white;background:var(--clr,#6366f1);box-shadow:0 4px 12px rgba(99,102,241,.25);}
+.btn-outline{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:9px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.mt{margin-top:14px;}
+.file-item{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:9px;box-shadow:var(--shadow);}
+.fi-info{flex:1;min-width:0;}
+.fi-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fi-size{font-size:10px;color:var(--muted);margin-top:2px;}
+.fi-del{width:28px;height:28px;border-radius:8px;background:#fee2e2;border:none;color:#dc2626;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fi-num{width:26px;height:26px;background:var(--clr,#6366f1);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.drag-handle{color:#cbd5e1;font-size:18px;cursor:grab;user-select:none;}
+.range-group{margin-bottom:12px;}
+.range-label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--muted);}
+input[type=range]{width:100%;accent-color:var(--clr,#6366f1);}
+input[type=text],input[type=url],input[type=number],select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Nunito','Noto Sans Devanagari',sans-serif;background:var(--bg);color:var(--text);outline:none;margin-bottom:10px;}
+input:focus,select:focus,textarea:focus{border-color:var(--clr,#6366f1);background:var(--white);}
+.canvas-wrap{position:relative;background:#e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+canvas{display:block;max-width:100%;}
+.tool-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.tool-pill{padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--muted);transition:all .15s;}
+.tool-pill.active{background:var(--clr,#6366f1);color:white;border-color:var(--clr,#6366f1);}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.color-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.15);transition:all .15s;}
+.color-dot.active,.color-dot:hover{border-color:#1e293b;transform:scale(1.15);}
+.ppt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.ppt-card{border-radius:12px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;box-shadow:var(--shadow);transition:all .2s;}
+.ppt-card:active{transform:scale(.97);}
+.ppt-card.selected{border-color:var(--clr,#6366f1);}
+.ppt-preview{height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.ppt-name{background:var(--white);padding:8px 10px;font-size:12px;font-weight:700;}
+.passport-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;background:white;padding:10px;border-radius:12px;margin-bottom:14px;box-shadow:var(--shadow);}
+#qr-output{display:flex;justify-content:center;padding:20px;background:var(--white);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--shadow);}
+.select-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.select-opt{border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s;box-shadow:var(--shadow);}
+.select-opt:active{transform:scale(.97);}
+.select-opt.selected{border-color:var(--clr,#6366f1);background:#f0f4ff;}
+.so-icon{font-size:24px;margin-bottom:6px;}
+.so-name{font-size:12px;font-weight:700;}
+.so-desc{font-size:10px;color:var(--muted);margin-top:2px;}
+.pages-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.page-thumb{background:var(--white);border:2px solid var(--border);border-radius:12px;padding:8px;text-align:center;box-shadow:var(--shadow);position:relative;}
+.page-thumb canvas{width:100%;border-radius:6px;display:block;}
+.page-num{margin-top:6px;font-size:11px;color:var(--muted);font-weight:600;}
+.page-del{position:absolute;top:5px;right:5px;width:20px;height:20px;background:#dc2626;border:none;border-radius:50%;color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.page-up,.page-down{position:absolute;bottom:28px;width:20px;height:20px;background:var(--clr,#6366f1);border:none;border-radius:50%;color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.page-up{left:5px;}.page-down{right:5px;}
+table{border-collapse:collapse;width:100%;font-size:12px;}
+th{background:var(--clr,#6366f1);color:white;padding:8px 10px;text-align:left;white-space:nowrap;}
+td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tr:nth-child(even) td{background:#f8fafc;}
+.excel-table-wrap{overflow-x:auto;margin-bottom:14px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:white;padding:12px 24px;border-radius:40px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s ease;white-space:nowrap;box-shadow:var(--shadow-lg);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{background:#059669;}
+.toast.error{background:#dc2626;}
 </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-  <div class="logo">📄 PDF Pro</div>
-  <button class="nav-btn active" onclick="switchTab('merge')">🔗 Merge</button>
-  <button class="nav-btn" onclick="switchTab('edit')">✏️ Edit</button>
-  <button class="nav-btn" onclick="switchTab('rearrange')">🔀 Rearrange</button>
-  <button class="nav-btn" onclick="switchTab('quality')">✨ Quality</button>
+  <div class="logo">
+    <div class="logo-icon">🏢</div>
+    <div class="logo-text">Office<span>Flow</span></div>
+  </div>
+  <button class="lang-btn" onclick="toggleLang()">🌐 हिं/En</button>
 </nav>
 
-<div class="main">
-
-  <!-- ===== MERGE PANEL ===== -->
-  <div id="panel-merge" class="panel active">
-    <div class="section-header">
-      <h2>🔗 Merge PDFs</h2>
-      <p>Upload multiple PDFs and merge them into one. Drag to reorder.</p>
-    </div>
-
-    <div class="upload-zone" id="merge-zone" onclick="document.getElementById('merge-input').click()">
-      <div class="icon">📂</div>
-      <h3>Click or Drag PDFs here</h3>
-      <p>Select multiple PDF files to merge</p>
-      <input type="file" id="merge-input" multiple accept=".pdf" onchange="handleMergeFiles(this.files)">
-    </div>
-
-    <div class="merge-list" id="merge-list"></div>
-
-    <div class="row">
-      <button class="btn btn-primary" onclick="mergePDFs()" id="merge-btn" disabled>🔗 Merge & Download</button>
-      <button class="btn btn-outline" onclick="clearMerge()">🗑️ Clear All</button>
-    </div>
+<div id="home-view">
+  <div class="home-header">
+    <h1 id="h-title">🚀 OfficeFlow</h1>
+    <p id="h-sub">Your complete office toolkit — PDF, Images, Excel, QR & more</p>
   </div>
-
-  <!-- ===== EDIT PANEL ===== -->
-  <div id="panel-edit" class="panel">
-    <div class="section-header">
-      <h2>✏️ Edit PDF</h2>
-      <p>Draw, write text, erase on PDF pages using canvas tools.</p>
-    </div>
-
-    <div class="upload-zone" id="edit-zone" onclick="document.getElementById('edit-input').click()" style="margin-bottom:16px">
-      <div class="icon">📝</div>
-      <h3>Upload PDF to Edit</h3>
-      <p>Select a PDF file</p>
-      <input type="file" id="edit-input" accept=".pdf" onchange="loadEditPDF(this.files[0])">
-    </div>
-
-    <div id="editor-area" style="display:none">
-      <div class="editor-layout">
-        <!-- Sidebar -->
-        <div class="editor-sidebar">
-          <div class="tool-group">
-            <div class="tool-label">Tools</div>
-            <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">🖊️ Pen</button>
-            <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">⬜ Eraser</button>
-            <button class="tool-btn" id="tool-text" onclick="setTool('text')">🔤 Text</button>
-            <button class="tool-btn" id="tool-select" onclick="setTool('select')">👆 Select</button>
-          </div>
-
-          <div class="tool-group">
-            <div class="tool-label">Color</div>
-            <div class="color-row">
-              <div class="color-dot active" style="background:#ef4444" onclick="setColor('#ef4444',this)"></div>
-              <div class="color-dot" style="background:#f59e0b" onclick="setColor('#f59e0b',this)"></div>
-              <div class="color-dot" style="background:#10b981" onclick="setColor('#10b981',this)"></div>
-              <div class="color-dot" style="background:#3b82f6" onclick="setColor('#3b82f6',this)"></div>
-              <div class="color-dot" style="background:#a855f7" onclick="setColor('#a855f7',this)"></div>
-              <div class="color-dot" style="background:#000000" onclick="setColor('#000000',this)"></div>
-              <div class="color-dot" style="background:#ffffff" onclick="setColor('#ffffff',this)"></div>
-            </div>
-          </div>
-
-          <div class="tool-group">
-            <div class="tool-label">Size</div>
-            <input type="range" class="size-slider" min="1" max="40" value="4" id="brush-size" oninput="setSize(this.value)">
-            <div style="font-size:12px;color:#64748b;text-align:center" id="size-label">4px</div>
-          </div>
-
-          <div class="tool-group">
-            <div class="tool-label">Text Input</div>
-            <input type="text" id="text-input" placeholder="Type text..." style="width:100%;margin-bottom:8px">
-            <button class="btn btn-primary btn-sm" onclick="addText()" style="width:100%">Add Text</button>
-          </div>
-
-          <div class="tool-group">
-            <div class="tool-label">Page</div>
-            <div style="display:flex;gap:6px;align-items:center;justify-content:center">
-              <button class="btn btn-outline btn-sm" onclick="prevPage()">◀</button>
-              <span id="page-indicator" style="font-size:13px;color:#94a3b8">1/1</span>
-              <button class="btn btn-outline btn-sm" onclick="nextPage()">▶</button>
-            </div>
-          </div>
-
-          <div class="tool-group mt-16">
-            <button class="btn btn-success btn-sm" onclick="saveEditedPDF()" style="width:100%">💾 Save PDF</button>
-            <button class="btn btn-outline btn-sm mt-16" onclick="clearCanvas()" style="width:100%;margin-top:8px">🗑️ Clear Page</button>
-          </div>
-        </div>
-
-        <!-- Canvas Area -->
-        <div class="editor-canvas-area">
-          <div class="editor-toolbar">
-            <span style="font-size:13px;color:#64748b">Page annotations will be merged into the PDF on save</span>
-          </div>
-          <div class="canvas-wrapper">
-            <canvas id="pdf-bg-canvas"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="tools-grid">
+    <div class="tool-card" style="--clr:#6366f1;--grad:linear-gradient(135deg,#6366f1,#8b5cf6)" onclick="openPanel('merge')"><span class="tc-icon">🔗</span><div class="tc-name" data-en="Merge PDF" data-hi="PDF जोड़ें">Merge PDF</div><div class="tc-desc" data-en="Combine PDFs" data-hi="PDF मिलाएं">Combine PDFs</div></div>
+    <div class="tool-card" style="--clr:#ec4899;--grad:linear-gradient(135deg,#ec4899,#f43f5e)" onclick="openPanel('edit')"><span class="tc-icon">✏️</span><div class="tc-name" data-en="Edit PDF" data-hi="PDF संपादित करें">Edit PDF</div><div class="tc-desc" data-en="Draw & annotate" data-hi="लिखें, मिटाएं">Draw & annotate</div></div>
+    <div class="tool-card" style="--clr:#f59e0b;--grad:linear-gradient(135deg,#f59e0b,#f97316)" onclick="openPanel('rearrange')"><span class="tc-icon">🔀</span><div class="tc-name" data-en="Rearrange Pages" data-hi="पेज क्रम बदलें">Rearrange</div><div class="tc-desc" data-en="Reorder pages" data-hi="पेज बदलें">Reorder pages</div></div>
+    <div class="tool-card" style="--clr:#10b981;--grad:linear-gradient(135deg,#10b981,#059669)" onclick="openPanel('compress')"><span class="tc-icon">📦</span><div class="tc-name" data-en="Compress PDF" data-hi="PDF छोटा करें">Compress PDF</div><div class="tc-desc" data-en="Reduce size" data-hi="साइज़ घटाएं">Reduce size</div></div>
+    <div class="tool-card" style="--clr:#3b82f6;--grad:linear-gradient(135deg,#3b82f6,#6366f1)" onclick="openPanel('img2pdf')"><span class="tc-icon">🖼️</span><div class="tc-name" data-en="Image → PDF" data-hi="इमेज → PDF">Image → PDF</div><div class="tc-desc" data-en="Convert images" data-hi="इमेज बदलें">Convert images</div></div>
+    <div class="tool-card" style="--clr:#8b5cf6;--grad:linear-gradient(135deg,#8b5cf6,#a855f7)" onclick="openPanel('pdf2img')"><span class="tc-icon">📄</span><div class="tc-name" data-en="PDF → Image" data-hi="PDF → इमेज">PDF → Image</div><div class="tc-desc" data-en="Extract pages" data-hi="पेज निकालें">Extract pages</div></div>
+    <div class="tool-card" style="--clr:#06b6d4;--grad:linear-gradient(135deg,#06b6d4,#3b82f6)" onclick="openPanel('imgenhance')"><span class="tc-icon">🎨</span><div class="tc-name" data-en="Image Enhance" data-hi="इमेज सुधारें">Image Enhance</div><div class="tc-desc" data-en="Crop & brighten" data-hi="क्रॉप, चमक">Crop & brighten</div></div>
+    <div class="tool-card" style="--clr:#f43f5e;--grad:linear-gradient(135deg,#f43f5e,#ec4899)" onclick="openPanel('ppt')"><span class="tc-icon">📊</span><div class="tc-name" data-en="PPT Templates" data-hi="PPT टेम्पलेट">PPT Templates</div><div class="tc-desc" data-en="Slide designs" data-hi="स्लाइड डिज़ाइन">Slide designs</div><span class="tc-badge">NEW</span></div>
+    <div class="tool-card" style="--clr:#7c3aed;--grad:linear-gradient(135deg,#7c3aed,#6366f1)" onclick="openPanel('passport')"><span class="tc-icon">🪪</span><div class="tc-name" data-en="Passport Photo" data-hi="पासपोर्ट फ़ोटो">Passport Photo</div><div class="tc-desc" data-en="Passport size" data-hi="पासपोर्ट साइज़">Passport size</div></div>
+    <div class="tool-card" style="--clr:#059669;--grad:linear-gradient(135deg,#059669,#10b981)" onclick="openPanel('qr')"><span class="tc-icon">📲</span><div class="tc-name" data-en="QR Generator" data-hi="QR जनरेटर">QR Generator</div><div class="tc-desc" data-en="Create QR codes" data-hi="QR कोड बनाएं">Create QR codes</div></div>
+    <div class="tool-card" style="--clr:#d97706;--grad:linear-gradient(135deg,#d97706,#f59e0b)" onclick="openPanel('excel2pdf')"><span class="tc-icon">📊</span><div class="tc-name" data-en="Excel → PDF" data-hi="Excel → PDF">Excel → PDF</div><div class="tc-desc" data-en="Spreadsheet to PDF" data-hi="स्प्रेडशीट PDF">Spreadsheet→PDF</div></div>
+    <div class="tool-card" style="--clr:#0891b2;--grad:linear-gradient(135deg,#0891b2,#06b6d4)" onclick="openPanel('pdf2excel')"><span class="tc-icon">📋</span><div class="tc-name" data-en="PDF → Excel" data-hi="PDF → Excel">PDF → Excel</div><div class="tc-desc" data-en="Extract tables" data-hi="टेबल निकालें">Extract tables</div></div>
+    <div class="tool-card" style="--clr:#be185d;--grad:linear-gradient(135deg,#be185d,#ec4899)" onclick="openPanel('print')"><span class="tc-icon">🖨️</span><div class="tc-name" data-en="Print Tool" data-hi="प्रिंट टूल">Print Tool</div><div class="tc-desc" data-en="Print PDF/Image" data-hi="प्रिंट करें">Print PDF/Image</div></div>
   </div>
-
-  <!-- ===== REARRANGE PANEL ===== -->
-  <div id="panel-rearrange" class="panel">
-    <div class="section-header">
-      <h2>🔀 Rearrange Pages</h2>
-      <p>Upload PDF, drag to reorder pages, delete unwanted pages.</p>
-    </div>
-
-    <div class="upload-zone" id="rearrange-zone" onclick="document.getElementById('rearrange-input').click()">
-      <div class="icon">🔀</div>
-      <h3>Upload PDF to Rearrange</h3>
-      <p>Select a PDF file</p>
-      <input type="file" id="rearrange-input" accept=".pdf" onchange="loadRearrangePDF(this.files[0])">
-    </div>
-
-    <div id="rearrange-controls" style="display:none">
-      <div class="row">
-        <button class="btn btn-primary" onclick="saveRearranged()">💾 Save Rearranged PDF</button>
-        <button class="btn btn-outline" onclick="resetRearrange()">🔄 Reset</button>
-        <span style="font-size:13px;color:#64748b">Drag pages to reorder • Click ✕ to delete</span>
-      </div>
-      <div class="pages-grid" id="pages-grid"></div>
-    </div>
-  </div>
-
-  <!-- ===== QUALITY PANEL ===== -->
-  <div id="panel-quality" class="panel">
-    <div class="section-header">
-      <h2>✨ Quality & Compress</h2>
-      <p>Optimize your PDF — reduce file size or enhance clarity.</p>
-    </div>
-
-    <div class="upload-zone" id="quality-zone" onclick="document.getElementById('quality-input').click()">
-      <div class="icon">✨</div>
-      <h3>Upload PDF to Optimize</h3>
-      <p>Select a PDF file</p>
-      <input type="file" id="quality-input" accept=".pdf" onchange="loadQualityPDF(this.files[0])">
-    </div>
-
-    <div id="quality-options-area" style="display:none">
-      <div class="quality-card">
-        <h3>Choose Optimization Mode</h3>
-        <p>Select how you want to optimize your PDF</p>
-        <div class="quality-options">
-          <div class="quality-opt selected" onclick="selectQuality('max-compress', this)">
-            <div class="q-icon">📦</div>
-            <div class="q-name">Max Compress</div>
-            <div class="q-desc">Smallest file size</div>
-          </div>
-          <div class="quality-opt" onclick="selectQuality('balanced', this)">
-            <div class="q-icon">⚖️</div>
-            <div class="q-name">Balanced</div>
-            <div class="q-desc">Good size & quality</div>
-          </div>
-          <div class="quality-opt" onclick="selectQuality('high-quality', this)">
-            <div class="q-icon">💎</div>
-            <div class="q-name">High Quality</div>
-            <div class="q-desc">Best visual clarity</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="quality-card">
-        <h3>File Info</h3>
-        <p id="quality-file-info">—</p>
-        <div class="row mt-16">
-          <button class="btn btn-primary" onclick="processQuality()">✨ Optimize & Download</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /main -->
-
-<!-- STATUS BAR -->
-<div class="status-bar" id="status-bar">
-  <div class="spinner" id="status-spinner"></div>
-  <span id="status-text">Processing...</span>
 </div>
 
+<div id="panel-view" class="panel-view">
+  <div class="panel-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div><div class="panel-title" id="panel-title">Tool</div><div class="panel-sub" id="panel-sub">Description</div></div>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let isHindi=false;
 
-// ===================== UTILS =====================
-function showStatus(msg, type='info', autoHide=false) {
-  const bar = document.getElementById('status-bar');
-  const spinner = document.getElementById('status-spinner');
-  const text = document.getElementById('status-text');
-  bar.className = 'status-bar show ' + type;
-  spinner.style.display = type === 'info' ? 'block' : 'none';
-  text.textContent = msg;
-  if (autoHide) setTimeout(() => bar.className = 'status-bar', 3000);
-}
-function hideStatus() { document.getElementById('status-bar').className = 'status-bar'; }
-
-function switchTab(tab) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + tab).classList.add('active');
-  event.target.classList.add('active');
+function toggleLang(){
+  isHindi=!isHindi;
+  document.querySelectorAll('[data-en]').forEach(el=>el.textContent=isHindi?el.dataset.hi:el.dataset.en);
+  document.getElementById('h-title').textContent=isHindi?'🚀 ऑफिसफ्लो':'🚀 OfficeFlow';
+  document.getElementById('h-sub').textContent=isHindi?'आपका पूरा ऑफिस टूलकिट':'Your complete office toolkit — PDF, Images, Excel, QR & more';
 }
 
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/1048576).toFixed(2) + ' MB';
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.className='toast',3000);}
+function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(2)+' MB';}
+function dl(bytes,name){const blob=new Blob([bytes],{type:'application/pdf'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+function dlBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+
+const panelDefs={
+  merge:{title:'🔗 Merge PDF',sub:'Multiple PDFs ek mein combine karo',clr:'#6366f1'},
+  edit:{title:'✏️ Edit PDF',sub:'Draw, text aur erase karo — Hindi & English',clr:'#ec4899'},
+  rearrange:{title:'🔀 Rearrange Pages',sub:'Pages reorder ya delete karo',clr:'#f59e0b'},
+  compress:{title:'📦 Compress PDF',sub:'File size kam karo',clr:'#10b981'},
+  img2pdf:{title:'🖼️ Image → PDF',sub:'Images ko PDF mein convert karo',clr:'#3b82f6'},
+  pdf2img:{title:'📄 PDF → Image',sub:'PDF pages ko images mein convert karo',clr:'#8b5cf6'},
+  imgenhance:{title:'🎨 Image Enhance',sub:'Crop, brightness, contrast adjust karo',clr:'#06b6d4'},
+  ppt:{title:'📊 PPT Templates',sub:'Ready-made slide designs — Hindi/English',clr:'#f43f5e'},
+  passport:{title:'🪪 Passport Photo',sub:'Normal photo se passport size banao',clr:'#7c3aed'},
+  qr:{title:'📲 QR Generator',sub:'Kisi bhi link ya text ka QR banao',clr:'#059669'},
+  excel2pdf:{title:'📊 Excel → PDF',sub:'Spreadsheet ko PDF mein convert karo',clr:'#d97706'},
+  pdf2excel:{title:'📋 PDF → Excel',sub:'PDF se content extract karo',clr:'#0891b2'},
+  print:{title:'🖨️ Print Tool',sub:'PDF ya image print karo',clr:'#be185d'},
+};
+
+function openPanel(id){
+  const def=panelDefs[id];
+  document.getElementById('home-view').style.display='none';
+  document.getElementById('panel-view').className='panel-view active';
+  document.getElementById('panel-title').textContent=def.title;
+  document.getElementById('panel-sub').textContent=def.sub;
+  const pb=document.getElementById('panel-body');
+  pb.style.setProperty('--clr',def.clr);
+  renderPanel(id);
+}
+function goHome(){document.getElementById('home-view').style.display='block';document.getElementById('panel-view').className='panel-view';}
+
+function renderPanel(id){
+  const fns={merge:renderMerge,edit:renderEdit,rearrange:renderRearrange,compress:renderCompress,img2pdf:renderImg2PDF,pdf2img:renderPDF2Img,imgenhance:renderImgEnhance,ppt:renderPPT,passport:renderPassport,qr:renderQR,excel2pdf:renderExcel2PDF,pdf2excel:renderPDF2Excel,print:renderPrint};
+  if(fns[id])fns[id](document.getElementById('panel-body'));
 }
 
-// ===================== MERGE =====================
-let mergeFiles = [];
-
-function handleMergeFiles(files) {
-  for (const f of files) {
-    if (f.type === 'application/pdf') mergeFiles.push(f);
-  }
-  renderMergeList();
+// 1. MERGE
+let mFiles=[];
+function renderMerge(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('mi').click()"><div class="uz-icon">📂</div><h3>PDF Files Upload Karo</h3><p>Multiple files select karo — drag to reorder</p><div class="uz-btn">📁 Files Chunno</div><input type="file" id="mi" multiple accept=".pdf" onchange="addMF(this.files)"></div><div id="ml"></div><div class="row"><button class="btn btn-primary" onclick="doMerge()" id="mb" disabled>🔗 Merge & Download</button><button class="btn btn-outline" onclick="mFiles=[];renderML()">🗑️ Clear</button></div>`;
+  mFiles=[];
+}
+function addMF(files){for(const f of files)if(f.type==='application/pdf')mFiles.push(f);renderML();}
+let dIdx=null;
+function renderML(){
+  const el=document.getElementById('ml');const btn=document.getElementById('mb');
+  if(btn)btn.disabled=mFiles.length<2;
+  if(!el)return;
+  el.innerHTML=mFiles.map((f,i)=>`<div class="file-item" draggable="true" ondragstart="dIdx=${i}" ondragover="event.preventDefault()" ondrop="dropM(${i})"><span class="drag-handle">⠿</span><div class="fi-num">${i+1}</div><div class="fi-info"><div class="fi-name">📄 ${f.name}</div><div class="fi-size">${fmtBytes(f.size)}</div></div><button class="fi-del" onclick="mFiles.splice(${i},1);renderML()">✕</button></div>`).join('');
+}
+function dropM(ti){if(dIdx===null||dIdx===ti)return;const m=mFiles.splice(dIdx,1)[0];mFiles.splice(ti,0,m);renderML();}
+async function doMerge(){
+  if(mFiles.length<2)return; toast('Merging...');
+  try{const{PDFDocument}=PDFLib;const merged=await PDFDocument.create();for(const f of mFiles){const b=await f.arrayBuffer();const d=await PDFDocument.load(b);const pp=await merged.copyPages(d,d.getPageIndices());pp.forEach(p=>merged.addPage(p));}dl(await merged.save(),'merged.pdf');toast('✅ Merged!','success');}
+  catch(e){toast('❌ '+e.message,'error');}
 }
 
-function renderMergeList() {
-  const list = document.getElementById('merge-list');
-  const btn = document.getElementById('merge-btn');
-  if (!mergeFiles.length) {
-    list.innerHTML = '';
-    btn.disabled = true;
-    return;
-  }
-  btn.disabled = false;
-  list.innerHTML = mergeFiles.map((f, i) => `
-    <div class="merge-item" draggable="true" data-index="${i}"
-      ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dropMerge(event,${i})">
-      <span class="drag-handle">⠿</span>
-      <div class="order">${i+1}</div>
-      <div style="flex:1">
-        <div class="file-name">📄 ${f.name}</div>
-        <div class="file-size">${formatBytes(f.size)}</div>
+// 2. EDIT PDF with Hindi support
+let eDoc=null,ePage=1,eTotal=1,eAnno={},ePdfBytes=null;
+let eCanvas=null,eCtx=null,eDrawing=false,eLast=[0,0],eTool='pen',eColor='#dc2626',eBrush=4;
+function renderEdit(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('ei').click()" id="ez"><div class="uz-icon">✏️</div><h3>PDF Upload Karo</h3><p>Pen, eraser, Hindi & English text tool</p><div class="uz-btn">📄 PDF Chunno</div><input type="file" id="ei" accept=".pdf" onchange="loadEPDF(this.files[0])"></div>
+  <div id="ea" style="display:none">
+    <div class="card">
+      <div class="card-title">Tools — Hindi & English dono support</div>
+      <div class="tool-row">
+        <button class="tool-pill active" id="tp-pen" onclick="setETool('pen')">🖊️ Pen</button>
+        <button class="tool-pill" id="tp-eraser" onclick="setETool('eraser')">⬜ Eraser</button>
+        <button class="tool-pill" id="tp-text" onclick="setETool('text')">🔤 Text</button>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeMergeFile(${i})">✕</button>
+      <div class="color-row">
+        <div class="color-dot active" style="background:#dc2626" onclick="eColor='#dc2626';setAD(this)"></div>
+        <div class="color-dot" style="background:#1d4ed8" onclick="eColor='#1d4ed8';setAD(this)"></div>
+        <div class="color-dot" style="background:#059669" onclick="eColor='#059669';setAD(this)"></div>
+        <div class="color-dot" style="background:#d97706" onclick="eColor='#d97706';setAD(this)"></div>
+        <div class="color-dot" style="background:#000000" onclick="eColor='#000000';setAD(this)"></div>
+        <div class="color-dot" style="background:#ffffff;border:1px solid #ccc" onclick="eColor='#ffffff';setAD(this)"></div>
+      </div>
+      <div class="range-group"><div class="range-label"><span>Brush Size</span><span id="bsv">4px</span></div><input type="range" min="1" max="40" value="4" oninput="eBrush=+this.value;document.getElementById('bsv').textContent=this.value+'px'"></div>
+      <div id="text-area" style="display:none">
+        <input type="text" id="eti" placeholder="यहाँ लिखें / Type here..." style="font-family:'Noto Sans Devanagari','Nunito',sans-serif">
+        <div class="range-group"><div class="range-label"><span>Font Size</span><span id="fsv">20px</span></div><input type="range" min="10" max="60" value="20" oninput="window._eFS=+this.value;document.getElementById('fsv').textContent=this.value+'px'"></div>
+        <button class="btn btn-primary btn-sm" onclick="addEText(100,100)">➕ Add Text</button>
+      </div>
     </div>
-  `).join('');
+    <div class="card">
+      <div class="canvas-wrap" id="ecw">
+        <canvas id="ebg" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
+        <canvas id="ecanvas" style="touch-action:none;cursor:crosshair;position:relative;"></canvas>
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn btn-outline btn-sm" onclick="goEPrev()">◀</button>
+        <span id="epg" style="font-size:13px;font-weight:700;color:var(--muted)">1/1</span>
+        <button class="btn btn-outline btn-sm" onclick="goENext()">▶</button>
+        <button class="btn btn-outline btn-sm" onclick="clearEC()">🗑️ Clear</button>
+      </div>
+      <button class="btn btn-primary" onclick="saveEPDF()">💾 PDF Save Karo</button>
+    </div>
+  </div>`;
+  window._eFS=20;
 }
-
-let dragSrcIndex = null;
-function dragStart(e, i) { dragSrcIndex = i; e.target.classList.add('dragging'); }
-function dragOver(e) { e.preventDefault(); }
-function dropMerge(e, targetIndex) {
-  e.preventDefault();
-  document.querySelectorAll('.merge-item').forEach(el => el.classList.remove('dragging'));
-  if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
-  const moved = mergeFiles.splice(dragSrcIndex, 1)[0];
-  mergeFiles.splice(targetIndex, 0, moved);
-  renderMergeList();
+function setAD(el){document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');}
+function setETool(t){eTool=t;document.querySelectorAll('.tool-pill').forEach(p=>p.classList.remove('active'));const el=document.getElementById('tp-'+t);if(el)el.classList.add('active');document.getElementById('text-area').style.display=t==='text'?'block':'none';}
+async function loadEPDF(file){
+  if(!file)return; toast('Loading...');
+  ePdfBytes=await file.arrayBuffer();eDoc=await pdfjsLib.getDocument({data:ePdfBytes}).promise;eTotal=eDoc.numPages;ePage=1;eAnno={};
+  document.getElementById('ez').style.display='none';document.getElementById('ea').style.display='block';
+  await renderEPage(); toast('✅ Loaded!','success');
 }
-function removeMergeFile(i) { mergeFiles.splice(i, 1); renderMergeList(); }
-function clearMerge() { mergeFiles = []; renderMergeList(); }
-
-async function mergePDFs() {
-  if (mergeFiles.length < 2) { showStatus('Please add at least 2 PDFs', 'error', true); return; }
-  showStatus('Merging PDFs...');
-  try {
-    const { PDFDocument } = PDFLib;
-    const merged = await PDFDocument.create();
-    for (const file of mergeFiles) {
-      const bytes = await file.arrayBuffer();
-      const doc = await PDFDocument.load(bytes);
-      const pages = await merged.copyPages(doc, doc.getPageIndices());
-      pages.forEach(p => merged.addPage(p));
+async function renderEPage(){
+  const page=await eDoc.getPage(ePage);
+  const scale=Math.min(1.3,(window.innerWidth-64)/page.getViewport({scale:1}).width);
+  const vp=page.getViewport({scale});
+  const bg=document.getElementById('ebg'),wrap=document.getElementById('ecw');
+  bg.width=vp.width;bg.height=vp.height;wrap.style.height=vp.height+'px';
+  await page.render({canvasContext:bg.getContext('2d'),viewport:vp}).promise;
+  eCanvas=document.getElementById('ecanvas');eCanvas.width=vp.width;eCanvas.height=vp.height;
+  eCtx=eCanvas.getContext('2d');eCtx.lineCap='round';eCtx.lineJoin='round';
+  if(eAnno[ePage]){const img=new Image();img.onload=()=>eCtx.drawImage(img,0,0);img.src=eAnno[ePage];}
+  document.getElementById('epg').textContent=ePage+'/'+eTotal;
+  setupEEvents();
+}
+function getPos(e,c){const r=c.getBoundingClientRect(),sx=c.width/r.width,sy=c.height/r.height;if(e.touches)return[(e.touches[0].clientX-r.left)*sx,(e.touches[0].clientY-r.top)*sy];return[(e.clientX-r.left)*sx,(e.clientY-r.top)*sy];}
+function setupEEvents(){
+  const c=eCanvas;
+  const s=e=>{e.preventDefault();eDrawing=true;eLast=getPos(e,c);if(eTool==='text'){const[x,y]=eLast;addEText(x,y);}};
+  const m=e=>{e.preventDefault();if(!eDrawing||eTool==='text')return;const[x,y]=getPos(e,c);eCtx.beginPath();eCtx.moveTo(eLast[0],eLast[1]);eCtx.lineTo(x,y);if(eTool==='eraser'){eCtx.globalCompositeOperation='destination-out';eCtx.strokeStyle='rgba(0,0,0,1)';eCtx.lineWidth=eBrush*5;}else{eCtx.globalCompositeOperation='source-over';eCtx.strokeStyle=eColor;eCtx.lineWidth=eBrush;}eCtx.stroke();eLast=[x,y];};
+  const en=()=>{eDrawing=false;eCtx.globalCompositeOperation='source-over';saveEAnno();};
+  ['mousedown','mousemove','mouseup','touchstart','touchmove','touchend'].forEach(ev=>c.removeEventListener(ev,c['_'+ev]));
+  c.addEventListener('mousedown',c._mousedown=s);c.addEventListener('mousemove',c._mousemove=m);c.addEventListener('mouseup',c._mouseup=en);
+  c.addEventListener('touchstart',c._touchstart=s,{passive:false});c.addEventListener('touchmove',c._touchmove=m,{passive:false});c.addEventListener('touchend',c._touchend=en,{passive:false});
+}
+function saveEAnno(){if(eCanvas)eAnno[ePage]=eCanvas.toDataURL();}
+function clearEC(){if(eCtx)eCtx.clearRect(0,0,eCanvas.width,eCanvas.height);eAnno[ePage]=null;}
+function addEText(x,y){
+  const txt=document.getElementById('eti')?.value;if(!txt)return;
+  eCtx.font=`${window._eFS||20}px 'Noto Sans Devanagari','Nunito',sans-serif`;
+  eCtx.fillStyle=eColor;eCtx.fillText(txt,x,y);saveEAnno();
+}
+async function goEPrev(){if(ePage<=1)return;saveEAnno();ePage--;await renderEPage();}
+async function goENext(){if(ePage>=eTotal)return;saveEAnno();ePage++;await renderEPage();}
+async function saveEPDF(){
+  toast('Saving...');saveEAnno();
+  try{
+    const{PDFDocument}=PDFLib;const newDoc=await PDFDocument.create();
+    for(let p=1;p<=eTotal;p++){
+      const pg=await eDoc.getPage(p);const vp=pg.getViewport({scale:1.5});
+      const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+      if(eAnno[p]){const ann=new Image();await new Promise(r=>{ann.onload=r;ann.src=eAnno[p];});c.getContext('2d').drawImage(ann,0,0,vp.width,vp.height);}
+      const imgD=c.toDataURL('image/jpeg',.92);const imgB=Uint8Array.from(atob(imgD.split(',')[1]),x=>x.charCodeAt(0));
+      const img=await newDoc.embedJpg(imgB);const np=newDoc.addPage([vp.width,vp.height]);
+      np.drawImage(img,{x:0,y:0,width:vp.width,height:vp.height});
     }
-    const pdfBytes = await merged.save();
-    download(pdfBytes, 'merged.pdf');
-    showStatus('✅ Merged successfully!', 'success', true);
-  } catch(e) {
-    showStatus('❌ Error merging: ' + e.message, 'error', true);
+    dl(await newDoc.save(),'edited.pdf');toast('✅ Saved!','success');
+  }catch(e){toast('❌ '+e.message,'error');}
+}
+
+// 3. REARRANGE
+let rBytes=null,rPages=[];
+function renderRearrange(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('ri').click()" id="rz"><div class="uz-icon">🔀</div><h3>PDF Upload Karo</h3><p>↑↓ buttons se pages reorder karo</p><div class="uz-btn">📄 PDF Chunno</div><input type="file" id="ri" accept=".pdf" onchange="loadR(this.files[0])"></div><div id="rc" style="display:none"><div class="row mt"><button class="btn btn-primary" onclick="saveR()">💾 Save PDF</button><button class="btn btn-outline" onclick="resetR()">🔄 Reset</button></div><div class="pages-grid" id="rg"></div></div>`;
+}
+async function loadR(file){
+  if(!file)return;toast('Loading...');rBytes=await file.arrayBuffer();
+  const pd=await pdfjsLib.getDocument({data:rBytes}).promise;rPages=Array.from({length:pd.numPages},(_,i)=>i+1);
+  document.getElementById('rz').style.display='none';document.getElementById('rc').style.display='block';
+  await renderRThumbs();toast('✅ Loaded!','success');
+}
+async function renderRThumbs(){
+  const grid=document.getElementById('rg');if(!grid)return;
+  const pd=await pdfjsLib.getDocument({data:rBytes}).promise;grid.innerHTML='';
+  for(let i=0;i<rPages.length;i++){
+    const p=await pd.getPage(rPages[i]);const vp=p.getViewport({scale:.25});
+    const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+    await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    const th=document.createElement('div');th.className='page-thumb';
+    th.innerHTML=`<button class="page-del" onclick="rPages.splice(${i},1);renderRThumbs()">✕</button><div class="page-num">Pg ${rPages[i]}</div>`;
+    th.insertBefore(c,th.querySelector('.page-num'));
+    if(i>0){const u=document.createElement('button');u.className='page-up';u.textContent='↑';u.onclick=()=>{[rPages[i-1],rPages[i]]=[rPages[i],rPages[i-1]];renderRThumbs();};th.appendChild(u);}
+    if(i<rPages.length-1){const d=document.createElement('button');d.className='page-down';d.textContent='↓';d.onclick=()=>{[rPages[i],rPages[i+1]]=[rPages[i+1],rPages[i]];renderRThumbs();};th.appendChild(d);}
+    grid.appendChild(th);
   }
 }
+async function saveR(){
+  toast('Saving...');
+  try{const{PDFDocument}=PDFLib;const src=await PDFDocument.load(rBytes);const nd=await PDFDocument.create();const pp=await nd.copyPages(src,rPages.map(p=>p-1));pp.forEach(p=>nd.addPage(p));dl(await nd.save(),'rearranged.pdf');toast('✅ Saved!','success');}
+  catch(e){toast('❌ '+e.message,'error');}
+}
+function resetR(){rBytes=null;rPages=[];document.getElementById('rz').style.display='';document.getElementById('rc').style.display='none';document.getElementById('ri').value='';}
 
-// Drag zones
-document.getElementById('merge-zone').addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.classList.add('drag'); });
-document.getElementById('merge-zone').addEventListener('dragleave', e => e.currentTarget.classList.remove('drag'));
-document.getElementById('merge-zone').addEventListener('drop', e => {
-  e.preventDefault(); e.currentTarget.classList.remove('drag');
-  handleMergeFiles(e.dataTransfer.files);
-});
-
-// ===================== EDITOR =====================
-let editPdfDoc = null, editPageNum = 1, editTotalPages = 1;
-let fabricCanvas = null;
-let currentTool = 'pen';
-let currentColor = '#ef4444';
-let currentSize = 4;
-let pageAnnotations = {};
-
-async function loadEditPDF(file) {
-  if (!file) return;
-  showStatus('Loading PDF...');
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-    editPdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    editTotalPages = editPdfDoc.numPages;
-    editPageNum = 1;
-    document.getElementById('edit-zone').style.display = 'none';
-    document.getElementById('editor-area').style.display = 'block';
-    pageAnnotations = {};
-    await renderEditPage();
-    showStatus('✅ PDF loaded!', 'success', true);
-  } catch(e) {
-    showStatus('❌ Error: ' + e.message, 'error', true);
-  }
+// 4. COMPRESS
+let cFile=null,cMode='max';
+function renderCompress(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('ci').click()"><div class="uz-icon">📦</div><h3>PDF Upload Karo</h3><p>File compress hogi</p><div class="uz-btn">📄 PDF Chunno</div><input type="file" id="ci" accept=".pdf" onchange="cFile=this.files[0];document.getElementById('cinfo').textContent='📄 '+this.files[0].name+' ('+fmtBytes(this.files[0].size)+')'"></div>
+  <div class="card"><div class="card-title">Mode Chunno</div><div class="select-opts"><div class="select-opt selected" onclick="selCMode(this,'max')" ><div class="so-icon">📦</div><div class="so-name">Max Compress</div><div class="so-desc">Sabse chhoti file</div></div><div class="select-opt" onclick="selCMode(this,'bal')"><div class="so-icon">⚖️</div><div class="so-name">Balanced</div><div class="so-desc">Size & quality</div></div></div><div id="cinfo" style="color:var(--muted);font-size:13px;margin-bottom:12px">Koi file nahi chunni</div><button class="btn btn-primary" onclick="doCompress()">📦 Compress & Download</button></div>`;
+}
+function selCMode(el,m){document.querySelectorAll('.select-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');cMode=m;}
+async function doCompress(){
+  if(!cFile){toast('Pehle file chunno!','error');return;}toast('Compressing...');
+  try{const{PDFDocument}=PDFLib;const b=await cFile.arrayBuffer();const d=await PDFDocument.load(b,{ignoreEncryption:true});const saved=await d.save({useObjectStreams:cMode==='max'});const pct=(((b.byteLength-saved.byteLength)/b.byteLength)*100).toFixed(1);dl(saved,'compressed.pdf');toast(`✅ ${pct>0?pct+'% smaller':'Done'}!`,'success');}
+  catch(e){toast('❌ '+e.message,'error');}
 }
 
-async function renderEditPage() {
-  const page = await editPdfDoc.getPage(editPageNum);
-  const viewport = page.getViewport({ scale: 1.4 });
-  const bgCanvas = document.getElementById('pdf-bg-canvas');
-  bgCanvas.width = viewport.width;
-  bgCanvas.height = viewport.height;
-  const ctx = bgCanvas.getContext('2d');
-  await page.render({ canvasContext: ctx, viewport }).promise;
-
-  if (fabricCanvas) {
-    pageAnnotations[editPageNum] = fabricCanvas.toJSON();
-    fabricCanvas.dispose();
-  }
-
-  // Create fabric canvas overlay
-  const wrapper = document.querySelector('.canvas-wrapper');
-  const oldFabric = document.getElementById('fabric-canvas');
-  if (oldFabric) oldFabric.remove();
-  const fc = document.createElement('canvas');
-  fc.id = 'fabric-canvas';
-  fc.width = viewport.width;
-  fc.height = viewport.height;
-  fc.style.position = 'absolute';
-  fc.style.top = bgCanvas.offsetTop + 'px';
-  fc.style.left = bgCanvas.offsetLeft + 'px';
-  wrapper.style.position = 'relative';
-  bgCanvas.style.position = 'relative';
-  bgCanvas.parentNode.insertBefore(fc, bgCanvas.nextSibling);
-
-  fabricCanvas = new fabric.Canvas('fabric-canvas', {
-    isDrawingMode: true,
-    width: viewport.width,
-    height: viewport.height
-  });
-  fabricCanvas.freeDrawingBrush.color = currentColor;
-  fabricCanvas.freeDrawingBrush.width = currentSize;
-
-  if (pageAnnotations[editPageNum]) {
-    fabricCanvas.loadFromJSON(pageAnnotations[editPageNum], () => fabricCanvas.renderAll());
-  }
-
-  document.getElementById('page-indicator').textContent = `${editPageNum}/${editTotalPages}`;
-  applyTool();
+// 5. IMAGE → PDF
+let iFiles=[];
+function renderImg2PDF(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('ii').click()"><div class="uz-icon">🖼️</div><h3>Images Upload Karo</h3><p>JPG, PNG, WebP — multiple select karo</p><div class="uz-btn">🖼️ Images Chunno</div><input type="file" id="ii" multiple accept="image/*" onchange="addIF(this.files)"></div><div id="il"></div><button class="btn btn-primary" onclick="doI2P()" id="i2pb" disabled>📄 PDF Banao & Download</button>`;
+  iFiles=[];
+}
+function addIF(files){for(const f of files)iFiles.push(f);renderIL();}
+function renderIL(){const el=document.getElementById('il');const btn=document.getElementById('i2pb');if(btn)btn.disabled=iFiles.length===0;if(!el)return;el.innerHTML=iFiles.map((f,i)=>`<div class="file-item"><div class="fi-num">${i+1}</div><div class="fi-info"><div class="fi-name">🖼️ ${f.name}</div><div class="fi-size">${fmtBytes(f.size)}</div></div><button class="fi-del" onclick="iFiles.splice(${i},1);renderIL()">✕</button></div>`).join('');}
+async function doI2P(){
+  if(!iFiles.length)return;toast('Converting...');
+  try{const{PDFDocument}=PDFLib;const doc=await PDFDocument.create();for(const f of iFiles){const ab=await f.arrayBuffer();let img;if(f.type==='image/jpeg'){img=await doc.embedJpg(ab);}else{const c=document.createElement('canvas');const bmp=await createImageBitmap(f);c.width=bmp.width;c.height=bmp.height;c.getContext('2d').drawImage(bmp,0,0);const jb=Uint8Array.from(atob(c.toDataURL('image/jpeg',.92).split(',')[1]),x=>x.charCodeAt(0));img=await doc.embedJpg(jb);}const pg=doc.addPage([img.width,img.height]);pg.drawImage(img,{x:0,y:0,width:img.width,height:img.height});}dl(await doc.save(),'images.pdf');toast('✅ PDF Ready!','success');}
+  catch(e){toast('❌ '+e.message,'error');}
 }
 
-function setTool(tool) {
-  currentTool = tool;
-  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tool-' + tool).classList.add('active');
-  applyTool();
+// 6. PDF → IMAGE
+let p2iFile=null;
+function renderPDF2Img(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('p2ii').click()"><div class="uz-icon">📄</div><h3>PDF Upload Karo</h3><p>Har page image banega</p><div class="uz-btn">📄 PDF Chunno</div><input type="file" id="p2ii" accept=".pdf" onchange="p2iFile=this.files[0];document.getElementById('p2info').textContent='📄 '+this.files[0].name"></div>
+  <div class="card"><div id="p2info" style="color:var(--muted);font-size:13px;margin-bottom:12px">Koi file nahi chunni</div><div class="range-group"><div class="range-label"><span>Quality Scale</span><span id="p2sv">1.5x</span></div><input type="range" min="1" max="3" step=".5" value="1.5" oninput="document.getElementById('p2sv').textContent=this.value+'x';window._p2s=+this.value"></div><button class="btn btn-primary" onclick="doP2I()">🖼️ Images Download Karo</button></div>
+  <div id="p2prev" class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px"></div>`;
+  window._p2s=1.5;
+}
+async function doP2I(){
+  if(!p2iFile){toast('Pehle file chunno!','error');return;}toast('Converting...');
+  try{const ab=await p2iFile.arrayBuffer();const pd=await pdfjsLib.getDocument({data:ab}).promise;const prev=document.getElementById('p2prev');prev.innerHTML='';for(let i=1;i<=pd.numPages;i++){const pg=await pd.getPage(i);const vp=pg.getViewport({scale:window._p2s||1.5});const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;c.toBlob(blob=>{const url=URL.createObjectURL(blob);const img=document.createElement('img');img.src=url;img.style.cssText='width:80px;border-radius:6px;cursor:pointer;box-shadow:var(--shadow)';img.title='Click to download page '+i;img.onclick=()=>{const a=document.createElement('a');a.href=url;a.download='page_'+i+'.jpg';a.click();};prev.appendChild(img);if(i===1)toast('✅ Click images to download!','success');},'image/jpeg',.92);};}
+  catch(e){toast('❌ '+e.message,'error');}
 }
 
-function applyTool() {
-  if (!fabricCanvas) return;
-  if (currentTool === 'pen') {
-    fabricCanvas.isDrawingMode = true;
-    fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
-    fabricCanvas.freeDrawingBrush.color = currentColor;
-    fabricCanvas.freeDrawingBrush.width = currentSize;
-  } else if (currentTool === 'eraser') {
-    fabricCanvas.isDrawingMode = true;
-    fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
-    fabricCanvas.freeDrawingBrush.color = 'rgba(0,0,0,0)';
-    fabricCanvas.freeDrawingBrush.width = currentSize * 4;
-    fabricCanvas.freeDrawingBrush.globalCompositeOperation = 'destination-out';
-  } else {
-    fabricCanvas.isDrawingMode = false;
-  }
+// 7. IMAGE ENHANCE
+let enhImg=null,enhCanvas=null,enhCtx=null;
+function renderImgEnhance(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('enhi').click()" id="enhz"><div class="uz-icon">🎨</div><h3>Image Upload Karo</h3><p>Brightness, contrast, saturation adjust karo</p><div class="uz-btn">🖼️ Image Chunno</div><input type="file" id="enhi" accept="image/*" onchange="loadEnhImg(this.files[0])"></div>
+  <div id="enha" style="display:none"><div class="canvas-wrap"><canvas id="enhc"></canvas></div>
+  <div class="card">
+    <div class="range-group"><div class="range-label"><span>☀️ Brightness</span><span id="brv">100%</span></div><input type="range" min="0" max="200" value="100" oninput="document.getElementById('brv').textContent=this.value+'%';applyF()" id="brsl"></div>
+    <div class="range-group"><div class="range-label"><span>🎨 Contrast</span><span id="cov">100%</span></div><input type="range" min="0" max="200" value="100" oninput="document.getElementById('cov').textContent=this.value+'%';applyF()" id="cosl"></div>
+    <div class="range-group"><div class="range-label"><span>🌈 Saturation</span><span id="sav">100%</span></div><input type="range" min="0" max="300" value="100" oninput="document.getElementById('sav').textContent=this.value+'%';applyF()" id="sasl"></div>
+    <div class="row mt"><button class="btn btn-primary" onclick="dlEnhImg()">⬇️ Download</button><button class="btn btn-outline" onclick="resetF()">🔄 Reset</button></div>
+  </div></div>`;
+}
+function loadEnhImg(file){if(!file)return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{enhImg=img;document.getElementById('enhz').style.display='none';document.getElementById('enha').style.display='block';enhCanvas=document.getElementById('enhc');const mw=Math.min(img.width,window.innerWidth-64),ratio=mw/img.width;enhCanvas.width=img.width*ratio;enhCanvas.height=img.height*ratio;enhCtx=enhCanvas.getContext('2d');applyF();};img.src=e.target.result;};r.readAsDataURL(file);}
+function applyF(){if(!enhCtx||!enhImg)return;const br=document.getElementById('brsl')?.value||100,co=document.getElementById('cosl')?.value||100,sa=document.getElementById('sasl')?.value||100;enhCtx.filter=`brightness(${br}%) contrast(${co}%) saturate(${sa}%)`;enhCtx.clearRect(0,0,enhCanvas.width,enhCanvas.height);enhCtx.drawImage(enhImg,0,0,enhCanvas.width,enhCanvas.height);}
+function resetF(){['brsl','cosl','sasl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=100;});['brv','cov','sav'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='100%';});applyF();}
+function dlEnhImg(){if(!enhCanvas)return;enhCanvas.toBlob(b=>dlBlob(b,'enhanced.jpg'),'image/jpeg',.95);}
+
+// 8. PPT TEMPLATES
+const pptT=[
+  {name:'Professional',bg:'#1e293b',txt:'#f8fafc',acc:'#3b82f6'},
+  {name:'Sarkari / Govt',bg:'linear-gradient(135deg,#166534,#15803d)',txt:'#fff',acc:'#fbbf24'},
+  {name:'Creative',bg:'linear-gradient(135deg,#ec4899,#8b5cf6)',txt:'#fff',acc:'#fff'},
+  {name:'Minimal',bg:'#ffffff',txt:'#1e293b',acc:'#6366f1'},
+  {name:'Bold',bg:'linear-gradient(135deg,#dc2626,#f97316)',txt:'#fff',acc:'#fff'},
+  {name:'Ocean',bg:'linear-gradient(135deg,#0891b2,#6366f1)',txt:'#fff',acc:'#fff'},
+];
+let selPPT=0;
+function renderPPT(b){
+  b.innerHTML=`<div class="card"><div class="card-title">Template Chunno</div><div class="ppt-grid" id="pptg"></div></div>
+  <div class="card"><div class="card-title">Slide Content — Hindi ya English dono likh sakte ho</div>
+    <input type="text" id="ptt" placeholder="Title / शीर्षक" style="font-family:'Noto Sans Devanagari','Nunito',sans-serif">
+    <input type="text" id="pts" placeholder="Subtitle / उपशीर्षक" style="font-family:'Noto Sans Devanagari','Nunito',sans-serif">
+    <textarea id="ptc" rows="4" placeholder="Content / सामग्री&#10;• Ek line ek point&#10;• एक लाइन एक बिंदु" style="font-family:'Noto Sans Devanagari','Nunito',sans-serif;resize:vertical"></textarea>
+    <button class="btn btn-primary" onclick="genSlide()">🖼️ Slide Banao & Download</button>
+  </div>
+  <div id="pptprev"></div>`;
+  const grid=document.getElementById('pptg');
+  pptT.forEach((t,i)=>{const card=document.createElement('div');card.className='ppt-card'+(i===0?' selected':'');card.innerHTML=`<div class="ppt-preview" style="background:${t.bg}"><span style="color:${t.txt};font-size:13px;font-weight:700">${t.name}</span></div><div class="ppt-name">${t.name}</div>`;card.onclick=()=>{document.querySelectorAll('.ppt-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');selPPT=i;};grid.appendChild(card);});
+}
+function genSlide(){
+  const t=pptT[selPPT];const title=document.getElementById('ptt').value||'Title';const sub=document.getElementById('pts').value||'Subtitle';const content=document.getElementById('ptc').value||'';
+  const c=document.createElement('canvas');c.width=960;c.height=540;const ctx=c.getContext('2d');
+  if(t.bg.includes('gradient')){const gr=ctx.createLinearGradient(0,0,960,540);const colors={'Sarkari / Govt':['#166534','#15803d'],Creative:['#ec4899','#8b5cf6'],Bold:['#dc2626','#f97316'],Ocean:['#0891b2','#6366f1']};const clrs=colors[t.name]||['#6366f1','#8b5cf6'];gr.addColorStop(0,clrs[0]);gr.addColorStop(1,clrs[1]);ctx.fillStyle=gr;}else ctx.fillStyle=t.bg;
+  ctx.fillRect(0,0,960,540);ctx.fillStyle=t.acc;ctx.fillRect(0,0,8,540);
+  ctx.fillStyle=t.txt;ctx.font='bold 48px Noto Sans Devanagari,Nunito,sans-serif';ctx.fillText(title,60,130);
+  ctx.font='24px Noto Sans Devanagari,Nunito,sans-serif';ctx.fillStyle=t.txt+'bb';ctx.fillText(sub,60,175);
+  ctx.fillStyle=t.acc;ctx.fillRect(60,205,700,2);
+  ctx.fillStyle=t.txt;ctx.font='20px Noto Sans Devanagari,Nunito,sans-serif';
+  content.split('\n').forEach((line,i)=>{if(line.trim()&&i<6)ctx.fillText('• '+line.trim(),60,250+i*44);});
+  const area=document.getElementById('pptprev');area.innerHTML='';
+  const img=document.createElement('img');img.src=c.toDataURL();img.style.cssText='width:100%;border-radius:12px;box-shadow:var(--shadow-lg);margin-bottom:12px';area.appendChild(img);
+  const dlBtn=document.createElement('button');dlBtn.className='btn btn-primary';dlBtn.textContent='⬇️ Slide Download Karo';dlBtn.onclick=()=>c.toBlob(blob=>dlBlob(blob,'slide.png'),'image/png');area.appendChild(dlBtn);
+  toast('✅ Slide ready!','success');
 }
 
-function setColor(color, el) {
-  currentColor = color;
-  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-  el.classList.add('active');
-  if (fabricCanvas && currentTool === 'pen') {
-    fabricCanvas.freeDrawingBrush.color = color;
-  }
+// 9. PASSPORT PHOTO
+let passImg=null;
+function renderPassport(b){
+  b.innerHTML=`<div class="card"><div class="card-title">Size Chunno</div><div class="select-opts"><div class="select-opt selected" onclick="selPS(this)" data-w="413" data-h="531"><div class="so-icon">🇮🇳</div><div class="so-name">India (35×45mm)</div><div class="so-desc">Indian passport/visa</div></div><div class="select-opt" onclick="selPS(this)" data-w="600" data-h="600"><div class="so-icon">🇺🇸</div><div class="so-name">US (2×2 inch)</div><div class="so-desc">US visa/passport</div></div></div></div>
+  <div class="upload-zone" onclick="document.getElementById('pi').click()" id="passz"><div class="uz-icon">🪪</div><h3>Photo Upload Karo</h3><p>Clear face photo chunno</p><div class="uz-btn">📸 Photo Chunno</div><input type="file" id="pi" accept="image/*" onchange="loadPass(this.files[0])"></div>
+  <div id="passa" style="display:none"><div class="card"><div class="card-title">Preview — 8 Photos Sheet</div><div class="passport-grid" id="passg"></div><div class="row"><button class="btn btn-primary" onclick="dlPass()">⬇️ Sheet Download Karo</button><button class="btn btn-outline" onclick="printPass()">🖨️ Print Karo</button></div></div></div>`;
+  window._pW=413;window._pH=531;
+}
+function selPS(el){document.querySelectorAll('.select-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');window._pW=+el.dataset.w;window._pH=+el.dataset.h;if(passImg)makePass();}
+function loadPass(file){if(!file)return;const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{passImg=img;document.getElementById('passz').style.display='none';document.getElementById('passa').style.display='block';makePass();};img.src=e.target.result;};r.readAsDataURL(file);}
+function makePass(){
+  if(!passImg)return;const grid=document.getElementById('passg');grid.innerHTML='';
+  for(let i=0;i<8;i++){const c=document.createElement('canvas');c.width=window._pW;c.height=window._pH;const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,window._pW,window._pH);const scale=Math.min(window._pW/passImg.width,window._pH/passImg.height);const w=passImg.width*scale,h=passImg.height*scale;ctx.drawImage(passImg,(window._pW-w)/2,(window._pH-h)/2,w,h);c.style.cssText='width:100%;border-radius:3px;border:1px solid #e2e8f0';grid.appendChild(c);}
+}
+function dlPass(){
+  const c=document.createElement('canvas');c.width=window._pW*4+30;c.height=window._pH*2+20;const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,c.width,c.height);
+  for(let r=0;r<2;r++)for(let col=0;col<4;col++){const x=col*(window._pW+10)+5,y=r*(window._pH+10)+5;if(passImg){const scale=Math.min(window._pW/passImg.width,window._pH/passImg.height);const w=passImg.width*scale,h=passImg.height*scale;ctx.fillStyle='white';ctx.fillRect(x,y,window._pW,window._pH);ctx.drawImage(passImg,x+(window._pW-w)/2,y+(window._pH-h)/2,w,h);}}
+  c.toBlob(b=>dlBlob(b,'passport_photos.jpg'),'image/jpeg',.95);toast('✅ Downloaded!','success');
+}
+function printPass(){const canvases=document.querySelectorAll('#passg canvas');if(!canvases.length)return;const w=window.open('');w.document.write('<html><body style="margin:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px">'+Array.from(canvases).map(c=>`<img src="${c.toDataURL()}" style="width:100%">`).join('')+`<script>window.onload=function(){window.print()}<\/script></body></html>`);}
+
+// 10. QR
+function renderQR(b){
+  b.innerHTML=`<div class="card"><div class="card-title">QR Content</div>
+    <select id="qrt" onchange="updQRPH()"><option value="url">🔗 Website URL</option><option value="text">📝 Text / हिंदी टेक्स्ट</option><option value="phone">📞 Phone Number</option><option value="email">📧 Email</option><option value="upi">💳 UPI ID</option></select>
+    <input type="text" id="qri" placeholder="https://example.com" style="font-family:'Noto Sans Devanagari','Nunito',sans-serif">
+    <div class="range-group"><div class="range-label"><span>Size</span><span id="qrsv">200px</span></div><input type="range" min="100" max="400" value="200" step="50" oninput="document.getElementById('qrsv').textContent=this.value+'px';window._qrs=+this.value"></div>
+    <button class="btn btn-primary" onclick="genQR()">📲 QR Banao</button>
+  </div>
+  <div id="qr-output" style="display:none"><div id="qrcd"></div></div>
+  <div id="qrdl" style="display:none" class="row mt">
+    <button class="btn btn-primary" onclick="dlQR()">⬇️ Download</button>
+    <button class="btn btn-outline" onclick="printQR()">🖨️ Print</button>
+  </div>`;
+  window._qrs=200;
+}
+function updQRPH(){const t=document.getElementById('qrt').value;const ph={url:'https://example.com',text:'अपना टेक्स्ट यहाँ / Your text here',phone:'9876543210',email:'name@email.com',upi:'name@upi'};document.getElementById('qri').placeholder=ph[t]||'';}
+function genQR(){
+  const val=document.getElementById('qri').value.trim();if(!val){toast('Content daalo!','error');return;}
+  const t=document.getElementById('qrt').value;let content=val;
+  if(t==='phone')content='tel:'+val;else if(t==='email')content='mailto:'+val;else if(t==='upi')content='upi://pay?pa='+val;
+  const div=document.getElementById('qrcd');div.innerHTML='';
+  document.getElementById('qr-output').style.display='flex';document.getElementById('qrdl').style.display='flex';
+  new QRCode(div,{text:content,width:window._qrs||200,height:window._qrs||200,colorDark:'#1e293b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  toast('✅ QR Ready!','success');
+}
+function dlQR(){const img=document.querySelector('#qrcd img');if(!img)return;const a=document.createElement('a');a.href=img.src;a.download='qrcode.png';a.click();}
+function printQR(){const img=document.querySelector('#qrcd img');if(!img)return;const w=window.open('');w.document.write(`<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;margin:0"><img src="${img.src}"><script>window.onload=function(){window.print()}<\/script></body></html>`);}
+
+// 11. EXCEL → PDF
+let xlFile=null,xlData=null;
+function renderExcel2PDF(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('xli').click()"><div class="uz-icon">📊</div><h3>Excel File Upload Karo</h3><p>.xlsx, .xls, .csv supported</p><div class="uz-btn">📊 File Chunno</div><input type="file" id="xli" accept=".xlsx,.xls,.csv" onchange="loadXL(this.files[0])"></div>
+  <div id="xlp" style="display:none"><div class="card"><div class="card-title">Preview</div><div class="excel-table-wrap" id="xlt"></div><button class="btn btn-primary mt" onclick="xlToPDF()">📄 PDF Banao & Download</button></div></div>`;
+}
+async function loadXL(file){
+  if(!file)return;toast('Loading...');xlFile=file;const ab=await file.arrayBuffer();const wb=XLSX.read(ab,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];xlData=XLSX.utils.sheet_to_json(ws,{header:1});
+  const cols=xlData[0]||[];const rows=xlData.slice(1);
+  document.getElementById('xlt').innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${c||''}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map((_,i)=>`<td>${r[i]!==undefined?r[i]:''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  document.getElementById('xlp').style.display='block';toast('✅ Loaded!','success');
+}
+async function xlToPDF(){
+  if(!xlData){toast('Pehle file chunno!','error');return;}toast('Converting...');
+  try{
+    const{PDFDocument,rgb,StandardFonts}=PDFLib;const doc=await PDFDocument.create();const font=await doc.embedFont(StandardFonts.Helvetica);const boldFont=await doc.embedFont(StandardFonts.HelveticaBold);
+    const cols=xlData[0]||[];const rows=xlData.slice(1);const pW=842,pH=595,margin=40,rH=22,cW=Math.min(120,(pW-margin*2)/Math.max(cols.length,1));
+    let page=doc.addPage([pW,pH]);let y=pH-margin;
+    const drawRow=(rd,isH)=>{if(y<margin+rH){page=doc.addPage([pW,pH]);y=pH-margin;}if(isH)page.drawRectangle({x:margin,y:y-rH,width:pW-margin*2,height:rH,color:rgb(.14,.39,.9)});rd.forEach((cell,i)=>{const txt=String(cell||'').substring(0,18);try{page.drawText(txt,{x:margin+i*cW+4,y:y-rH+6,size:9,font:isH?boldFont:font,color:isH?rgb(1,1,1):rgb(.1,.1,.1)});}catch(e){}});if(!isH)page.drawLine({start:{x:margin,y:y-rH},end:{x:pW-margin,y:y-rH},thickness:.5,color:rgb(.9,.9,.9)});y-=rH;};
+    drawRow(cols,true);rows.forEach(r=>drawRow(r.map(String),false));
+    dl(await doc.save(),'excel.pdf');toast('✅ PDF Ready!','success');
+  }catch(e){toast('❌ '+e.message,'error');}
 }
 
-function setSize(val) {
-  currentSize = parseInt(val);
-  document.getElementById('size-label').textContent = val + 'px';
-  if (fabricCanvas) fabricCanvas.freeDrawingBrush.width = currentSize;
+// 12. PDF → EXCEL
+let p2xFile=null;
+function renderPDF2Excel(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('p2xi').click()"><div class="uz-icon">📋</div><h3>PDF Upload Karo</h3><p>Text content extract hoga Excel mein</p><div class="uz-btn">📄 PDF Chunno</div><input type="file" id="p2xi" accept=".pdf" onchange="loadP2X(this.files[0])"></div>
+  <div class="card" id="p2xc" style="display:none"><div class="card-title">Extracted Content Preview</div><div id="p2xprev" style="max-height:200px;overflow-y:auto;font-size:12px;color:var(--muted);background:var(--bg);padding:10px;border-radius:8px;margin-bottom:12px;font-family:'Noto Sans Devanagari','Nunito',sans-serif"></div><button class="btn btn-primary" onclick="dlAsXL()">📊 Excel Download Karo</button></div>`;
+}
+async function loadP2X(file){
+  if(!file)return;toast('Extracting...');p2xFile=file;const ab=await file.arrayBuffer();const pd=await pdfjsLib.getDocument({data:ab}).promise;let all=[];
+  for(let i=1;i<=pd.numPages;i++){const pg=await pd.getPage(i);const tc=await pg.getTextContent();const txt=tc.items.map(it=>it.str).join(' ');txt.split(/\s{3,}/).forEach(l=>{if(l.trim())all.push(['Page '+i,l.trim()]);});}
+  window._p2xData=all;document.getElementById('p2xc').style.display='block';document.getElementById('p2xprev').textContent=all.slice(0,20).map(r=>r.join(' | ')).join('\n');
+  toast('✅ Extracted!','success');
+}
+function dlAsXL(){
+  if(!window._p2xData){toast('Pehle PDF chunno!','error');return;}
+  const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([['Page','Content'],...window._p2xData]);XLSX.utils.book_append_sheet(wb,ws,'PDF Content');XLSX.writeFile(wb,'pdf_extract.xlsx');
+  toast('✅ Excel Downloaded!','success');
 }
 
-function addText() {
-  const txt = document.getElementById('text-input').value;
-  if (!txt || !fabricCanvas) return;
-  const text = new fabric.IText(txt, {
-    left: 100, top: 100,
-    fill: currentColor,
-    fontSize: Math.max(currentSize * 4, 16),
-    fontFamily: 'Arial'
-  });
-  fabricCanvas.add(text);
-  fabricCanvas.setActiveObject(text);
-  fabricCanvas.isDrawingMode = false;
+// 13. PRINT
+let prFile=null;
+function renderPrint(b){
+  b.innerHTML=`<div class="upload-zone" onclick="document.getElementById('pri').click()"><div class="uz-icon">🖨️</div><h3>File Upload Karo</h3><p>PDF ya Image — print karo directly</p><div class="uz-btn">📂 File Chunno</div><input type="file" id="pri" accept=".pdf,image/*" onchange="loadPr(this.files[0])"></div>
+  <div class="card" id="prc" style="display:none"><div class="card-title">Print Preview</div><div id="prprev" style="text-align:center;margin-bottom:14px"></div><button class="btn btn-primary" onclick="doPrint()">🖨️ Print Karo</button></div>`;
 }
-
-function clearCanvas() {
-  if (fabricCanvas) { fabricCanvas.clear(); }
+function loadPr(file){
+  if(!file)return;prFile=file;document.getElementById('prc').style.display='block';const prev=document.getElementById('prprev');
+  if(file.type.startsWith('image/')){const url=URL.createObjectURL(file);prev.innerHTML=`<img src="${url}" style="max-width:100%;max-height:200px;border-radius:8px;box-shadow:var(--shadow)">`;}
+  else prev.innerHTML=`<div style="padding:20px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--muted)">📄 ${file.name} — ${fmtBytes(file.size)}</div>`;
+  toast('✅ Ready to print!','success');
 }
-
-async function prevPage() {
-  if (editPageNum <= 1) return;
-  pageAnnotations[editPageNum] = fabricCanvas.toJSON();
-  editPageNum--;
-  await renderEditPage();
-}
-
-async function nextPage() {
-  if (editPageNum >= editTotalPages) return;
-  pageAnnotations[editPageNum] = fabricCanvas.toJSON();
-  editPageNum++;
-  await renderEditPage();
-}
-
-async function saveEditedPDF() {
-  showStatus('Saving PDF with annotations...');
-  try {
-    pageAnnotations[editPageNum] = fabricCanvas.toJSON();
-    const { PDFDocument, rgb } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-
-    for (let p = 1; p <= editTotalPages; p++) {
-      const pdfPage = await editPdfDoc.getPage(p);
-      const viewport = pdfPage.getViewport({ scale: 1.4 });
-
-      // Render PDF page
-      const bgC = document.createElement('canvas');
-      bgC.width = viewport.width; bgC.height = viewport.height;
-      await pdfPage.render({ canvasContext: bgC.getContext('2d'), viewport }).promise;
-
-      // Merge annotation
-      if (pageAnnotations[p]) {
-        const tempFabric = document.createElement('canvas');
-        tempFabric.width = viewport.width; tempFabric.height = viewport.height;
-        const tempCanvas = new fabric.StaticCanvas(tempFabric, { width: viewport.width, height: viewport.height });
-        await new Promise(res => tempCanvas.loadFromJSON(pageAnnotations[p], () => { tempCanvas.renderAll(); res(); }));
-        const bgCtx = bgC.getContext('2d');
-        bgCtx.drawImage(tempCanvas.getElement(), 0, 0);
-      }
-
-      const imgData = bgC.toDataURL('image/jpeg', 0.92);
-      const imgBytes = Uint8Array.from(atob(imgData.split(',')[1]), c => c.charCodeAt(0));
-      const img = await pdfDoc.embedJpg(imgBytes);
-      const newPage = pdfDoc.addPage([viewport.width, viewport.height]);
-      newPage.drawImage(img, { x: 0, y: 0, width: viewport.width, height: viewport.height });
-    }
-
-    const bytes = await pdfDoc.save();
-    download(bytes, 'edited.pdf');
-    showStatus('✅ PDF saved!', 'success', true);
-  } catch(e) {
-    showStatus('❌ Error saving: ' + e.message, 'error', true);
-  }
-}
-
-// ===================== REARRANGE =====================
-let rearrangePdfData = null;
-let rearrangePages = [];
-let dragPageIndex = null;
-
-async function loadRearrangePDF(file) {
-  if (!file) return;
-  showStatus('Loading pages...');
-  try {
-    rearrangePdfData = await file.arrayBuffer();
-    const pdfDoc = await pdfjsLib.getDocument({ data: rearrangePdfData }).promise;
-    const total = pdfDoc.numPages;
-    rearrangePages = Array.from({ length: total }, (_, i) => i + 1);
-    document.getElementById('rearrange-zone').style.display = 'none';
-    document.getElementById('rearrange-controls').style.display = 'block';
-    await renderPageThumbs(pdfDoc);
-    showStatus('✅ Loaded ' + total + ' pages', 'success', true);
-  } catch(e) {
-    showStatus('❌ Error: ' + e.message, 'error', true);
-  }
-}
-
-async function renderPageThumbs(pdfDoc) {
-  const grid = document.getElementById('pages-grid');
-  grid.innerHTML = '';
-  for (let i = 0; i < rearrangePages.length; i++) {
-    const pageNum = rearrangePages[i];
-    const page = await pdfDoc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 0.3 });
-    const c = document.createElement('canvas');
-    c.width = viewport.width; c.height = viewport.height;
-    await page.render({ canvasContext: c.getContext('2d'), viewport }).promise;
-
-    const thumb = document.createElement('div');
-    thumb.className = 'page-thumb';
-    thumb.draggable = true;
-    thumb.dataset.index = i;
-    thumb.innerHTML = `
-      <button class="page-del" onclick="deletePage(${i})">✕</button>
-      <div class="page-num">Page ${pageNum}</div>
-    `;
-    thumb.insertBefore(c, thumb.querySelector('.page-num'));
-    thumb.addEventListener('dragstart', e => { dragPageIndex = i; thumb.classList.add('dragging'); });
-    thumb.addEventListener('dragover', e => e.preventDefault());
-    thumb.addEventListener('drop', async e => {
-      e.preventDefault();
-      document.querySelectorAll('.page-thumb').forEach(t => t.classList.remove('dragging'));
-      if (dragPageIndex === null || dragPageIndex === i) return;
-      const moved = rearrangePages.splice(dragPageIndex, 1)[0];
-      rearrangePages.splice(i, 0, moved);
-      const pd = await pdfjsLib.getDocument({ data: rearrangePdfData }).promise;
-      await renderPageThumbs(pd);
-    });
-    thumb.addEventListener('dragend', () => document.querySelectorAll('.page-thumb').forEach(t => t.classList.remove('dragging')));
-    grid.appendChild(thumb);
-  }
-}
-
-async function deletePage(index) {
-  rearrangePages.splice(index, 1);
-  const pd = await pdfjsLib.getDocument({ data: rearrangePdfData }).promise;
-  await renderPageThumbs(pd);
-}
-
-async function saveRearranged() {
-  showStatus('Saving rearranged PDF...');
-  try {
-    const { PDFDocument } = PDFLib;
-    const srcDoc = await PDFDocument.load(rearrangePdfData);
-    const newDoc = await PDFDocument.create();
-    const indices = rearrangePages.map(p => p - 1);
-    const pages = await newDoc.copyPages(srcDoc, indices);
-    pages.forEach(p => newDoc.addPage(p));
-    const bytes = await newDoc.save();
-    download(bytes, 'rearranged.pdf');
-    showStatus('✅ Saved!', 'success', true);
-  } catch(e) {
-    showStatus('❌ Error: ' + e.message, 'error', true);
-  }
-}
-
-function resetRearrange() {
-  rearrangePdfData = null; rearrangePages = [];
-  document.getElementById('rearrange-zone').style.display = '';
-  document.getElementById('rearrange-controls').style.display = 'none';
-  document.getElementById('rearrange-input').value = '';
-}
-
-// ===================== QUALITY =====================
-let qualityFile = null;
-let selectedQuality = 'max-compress';
-
-async function loadQualityPDF(file) {
-  qualityFile = file;
-  document.getElementById('quality-zone').style.display = 'none';
-  document.getElementById('quality-options-area').style.display = 'block';
-  document.getElementById('quality-file-info').textContent = `${file.name} — ${formatBytes(file.size)}`;
-}
-
-function selectQuality(mode, el) {
-  selectedQuality = mode;
-  document.querySelectorAll('.quality-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-async function processQuality() {
-  if (!qualityFile) return;
-  showStatus('Optimizing PDF...');
-  try {
-    const { PDFDocument } = PDFLib;
-    const bytes = await qualityFile.arrayBuffer();
-    const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
-
-    // Re-save with pdf-lib (this removes redundant data, unused objects etc.)
-    const quality = selectedQuality === 'max-compress' ? 0.5 : selectedQuality === 'balanced' ? 0.75 : 0.95;
-    const savedBytes = await doc.save({ useObjectStreams: selectedQuality !== 'high-quality' });
-
-    const originalSize = bytes.byteLength;
-    const newSize = savedBytes.byteLength;
-    const saving = (((originalSize - newSize) / originalSize) * 100).toFixed(1);
-
-    download(savedBytes, 'optimized.pdf');
-    showStatus(`✅ Done! ${saving > 0 ? saving + '% smaller' : 'Optimized'} (${formatBytes(newSize)})`, 'success', true);
-  } catch(e) {
-    showStatus('❌ Error: ' + e.message, 'error', true);
-  }
-}
-
-// ===================== DOWNLOAD =====================
-function download(bytes, filename) {
-  const blob = new Blob([bytes], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+function doPrint(){
+  if(!prFile){toast('Pehle file chunno!','error');return;}
+  const url=URL.createObjectURL(prFile);
+  if(prFile.type==='application/pdf'){const w=window.open(url);if(w)w.onload=()=>w.print();}
+  else{const w=window.open('');if(w)w.document.write(`<html><body style="margin:0;display:flex;justify-content:center"><img src="${url}" style="max-width:100%"><script>window.onload=function(){window.print()}<\/script></body></html>`);}
 }
 </script>
 </body>
