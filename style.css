@@ -1,0 +1,91 @@
+
+body{
+font-family:Arial, sans-serif;
+background:#f9faf8;
+margin:0;
+color:#333;
+}
+
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:14px 20px;
+background:white;
+box-shadow:0 6px 20px rgba(0,0,0,0.05);
+position:sticky;
+top:0;
+}
+
+.logo{
+display:flex;
+align-items:center;
+gap:10px;
+font-weight:bold;
+font-size:18px;
+}
+
+.logo-icon{
+background:#9ED9B3;
+color:white;
+padding:6px 10px;
+border-radius:8px;
+}
+
+.logo span{
+color:#9ED9B3;
+}
+
+#searchInput{
+padding:8px 12px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+.hero{
+text-align:center;
+padding:40px 20px;
+}
+
+.upload{
+display:flex;
+justify-content:center;
+padding:20px;
+}
+
+#dropZone{
+border:2px dashed #9ED9B3;
+padding:40px;
+border-radius:16px;
+background:#fff;
+}
+
+.category{
+padding:30px 20px;
+}
+
+.tools-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+gap:16px;
+}
+
+.tool-card{
+background:white;
+padding:18px;
+border-radius:14px;
+box-shadow:0 6px 18px rgba(0,0,0,0.06);
+cursor:pointer;
+transition:.25s;
+text-align:center;
+}
+
+.tool-card:hover{
+transform:translateY(-6px);
+}
+
+footer{
+text-align:center;
+padding:20px;
+color:#777;
+}
